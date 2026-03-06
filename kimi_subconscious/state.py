@@ -12,6 +12,7 @@ from typing import Any
 from platformdirs import user_data_dir
 
 from .atomic import atomic_write_json, atomic_write_text, file_lock
+from .git_committer import get_committer
 
 
 class StateManager:
@@ -54,6 +55,10 @@ class StateManager:
         config = self.get_config()
         config["letta_api_key"] = api_key
         self.save_config()
+        # Auto-commit
+        committer = get_committer()
+        if committer:
+            committer.commit_config_change("api_key")
     
     def get_agent_id(self) -> str | None:
         """Get configured agent ID."""
@@ -64,6 +69,10 @@ class StateManager:
         config = self.get_config()
         config["agent_id"] = agent_id
         self.save_config()
+        # Auto-commit
+        committer = get_committer()
+        if committer:
+            committer.commit_config_change("agent_id")
     
     def get_letta_base_url(self) -> str:
         """Get Letta base URL."""
@@ -200,6 +209,13 @@ class StateManager:
             "created_at": datetime.now().isoformat(),
         }
         self.save_conversations(project_hash, conversations)
+        # Auto-commit
+        committer = get_committer()
+        if committer:
+            committer.commit_state_change(
+                "conversation",
+                f"New conversation for {session_id[:8]}...",
+            )
     
     def get_last_read_path(self, project_hash: str, session_id: str) -> Path:
         """Get the last read offset file path."""

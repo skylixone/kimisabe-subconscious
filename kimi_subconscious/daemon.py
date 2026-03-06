@@ -11,6 +11,7 @@ from pathlib import Path
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from .git_committer import get_committer, init_git_committer
 from .letta_client import LettaClient, SubconsciousAgent
 from .models import DetectedInsight
 from .observability import get_logger, get_liveness, get_metrics, init_observability, LivenessMonitor, MetricsCollector
@@ -162,6 +163,11 @@ class SessionWatcher(FileSystemEventHandler):
             self._update_subconscious(project_hash, guidance_messages)
             self.state.set_last_seen_message(project_hash, session_id, newest_id)
             
+            # Auto-commit guidance
+            committer = get_committer()
+            if committer and guidance_messages:
+                committer.commit_guidance(guidance_messages[0])
+            
             # Trigger auto-restart if Phoenix mode enabled
             if self._phoenix_enabled:
                 reason = f"New guidance: {guidance_messages[0][:50]}..." if guidance_messages else "Memory updated"
@@ -207,6 +213,9 @@ def start_daemon(foreground: bool = False) -> int:
     
     # Initialize observability
     logger, liveness, metrics = init_observability(state.data_dir)
+    
+    # Initialize git committer
+    init_git_committer()
     
     # Setup check
     api_key = state.get_api_key()
