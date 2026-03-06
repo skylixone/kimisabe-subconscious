@@ -297,7 +297,8 @@ class HealthChecker:
         # Check liveness heartbeat
         alive, age = self.liveness.is_alive()
         status.watcher_alive = alive
-        status.last_watchdog_ping = self.liveness.get_last_ping()
+        last_ping = self.liveness.get_last_ping()
+        status.last_watchdog_ping = last_ping.timestamp() if last_ping else None
         status.watchdog_ping_age_seconds = age
         
         # Deep checks
