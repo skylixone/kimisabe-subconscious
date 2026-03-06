@@ -1,0 +1,330 @@
+# Kimi Subconscious
+
+A subconscious for [Kimi Code CLI](https://github.com/moonshot-ai/Kimi-Code-CLI). A [Letta](https://letta.com) agent that watches your sessions, accumulates context, and provides async guidance.
+
+> [!IMPORTANT]
+> This is a fork of [claude-subconscious](https://github.com/letta-ai/claude-subconscious) adapted for Kimi Code CLI.
+> Full credit to the Letta team for the original concept and architecture.
+
+## What Is This?
+
+Kimi Code forgets everything between sessions. Kimi Subconscious adds a persistent memory layer underneath:
+
+- **A Letta agent observes** every Kimi Code conversation
+- **Accumulates patterns** across sessions, projects, and time
+- **Provides async guidance**, reminders, and context
+
+Using Letta's [Conversations](https://docs.letta.com/guides/agents/conversations/) feature, a single agent can serve multiple Kimi Code sessions in parallel with shared memory across all of them.
+
+## How It Works
+
+```
+┌─────────────┐          ┌───────────────────┐     ┌─────────────┐
+│  Kimi Code  │◄────────►│ kimi-subconscious │────▶│ Letta Agent │
+└─────────────┘          └───────────────────┘     └─────────────┘
+       │                          │
+       │   Session Start          │ Creates conversation
+       │   wire.jsonl changes     │ Parses → Detects insights
+       │   Session ends           │ Sends to Letta
+       │                          │ Updates SUBCONSCIOUS.md
+```
+
+**Smart insight detection** (local, no API cost):
+- Explicit: "remember this", "important"
+- Corrections: "no", "wrong", "actually"
+- Repeated errors: 3+ tool failures
+- File hotspots: Same file edited 3+ times
+- Breakthroughs: "finally", "works!"
+
+**Daily consolidation** (1 AM, ~30 API calls/month):
+- Runs via macOS `launchd`
+- Processes accumulated insights
+- Updates memory blocks
+- Prepares guidance for next sessions
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/ikornienko/kimi-subconscious.git
+cd kimi-subconscious
+
+# Install
+pip install -e .
+
+# Set up (requires Letta API key)
+kimisub setup
+```
+
+Get your API key from [app.letta.com](https://app.letta.com).
+
+## Daily Consolidation Schedule (macOS)
+
+Install the 1 AM consolidation job:
+
+```bash
+./scripts/install-launchd.sh
+```
+
+This creates a `launchd` job that:
+- Runs daily at 1:00 AM
+- Uses `caffeinate` to ensure it completes even if screen is off
+- If asleep, runs on next wake
+
+To uninstall:
+```bash
+launchctl unload ~/Library/LaunchAgents/com.kimisub.consolidate.plist
+rm ~/Library/LaunchAgents/com.kimisub.consolidate.plist
+```
+
+## Usage
+
+### 🚀 KIMISABE - The One-Command Experience
+
+```bash
+kimisabe
+```
+
+This single command:
+1. Starts the Subconscious daemon (if not running)
+2. Launches Kimi Code with memory integration ready
+
+When you say "remember this..." during your session, Kimi will auto-restart with new context using `--continue` (zero data loss).
+
+```bash
+# When done for the day
+kimisend
+```
+
+### One-shot sync (manual)
+
+```bash
+# In your project directory
+kimisub sync
+```
+
+This will:
+1. Find the current Kimi session for this project
+2. Parse wire.jsonl for new messages
+3. Detect insights
+4. Send to Letta (if insights found)
+5. Update SUBCONSCIOUS.md
+
+### Phoenix Mode (Auto-Restart) 🕶️
+
+**The "I know kung-fu" experience.**
+
+```bash
+# Enable auto-restart when new guidance arrives
+kimisub phoenix enable
+
+# Start the daemon
+kimisub daemon --start
+```
+
+**What happens:**
+1. You: *"Remember to always use explicit types"*
+2. Daemon detects → Sends to Letta → Gets guidance back
+3. Kimi **auto-restarts** with `--continue` (same session, fresh context)
+4. Kimi: *"Got it. From your preferences: explicit types..."*
+
+```bash
+# Disable if you prefer manual control
+kimisub phoenix disable
+```
+
+### Background daemon (watch mode)
+
+```bash
+# Start daemon
+kimisub daemon --start
+
+# Check status
+kimisub daemon --status
+
+# Stop daemon
+kimisub daemon --stop
+```
+
+The daemon watches `~/.kimi/sessions/` and syncs automatically when insights are detected.
+
+### Daily consolidation (manual trigger)
+
+```bash
+kimisub consolidate
+```
+
+Sends accumulated insights to Letta for sleep-like memory integration.
+
+### View current guidance
+
+```bash
+kimisub guidance
+```
+
+## Configuration
+
+```bash
+# Show config
+kimisub config
+
+# Re-run setup
+kimisub setup
+```
+
+Config is stored at `~/Library/Application Support/kimi-subconscious/config.json`.
+
+## SUBCONSCIOUS.md
+
+Kimi Subconscious creates a `SUBCONSCIOUS.md` file in your project (or links to the global one):
+
+```markdown
+# Subconscious
+
+> This file is auto-generated by Kimi Subconscious...
+
+## Context
+**Agent:** Subconscious
+**Agent ID:** `agent-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+
+## Active Guidance
+> Messages from your Subconscious for this session:
+
+### Message 1
+You've been debugging CSS variables for 20 minutes. 
+Consider checking the aerospace-ui tokens first.
+
+## Memory Blocks
+### User Preferences
+*Learned coding style and preferences*
+```
+- Prefers explicit type annotations
+- Uses `aerospace-ui` for all new projects
+```
+...
+```
+
+**Git**: Automatically added to `.gitignore`. Commit only if you want to share context.
+
+## Memory Blocks
+
+The Subconscious agent maintains 8 memory blocks:
+
+| Block | Purpose |
+|-------|---------|
+| `core_directives` | Role definition and behavioral guidelines |
+| `guidance` | Active guidance for the next session |
+| `user_preferences` | Learned coding style, tool preferences, communication style |
+| `project_context` | Codebase knowledge, architecture decisions, known gotchas |
+| `session_patterns` | Recurring behaviors, time-based patterns, common struggles |
+| `pending_items` | Unfinished work, explicit TODOs, follow-up items |
+| `self_improvement` | Guidelines for evolving memory architecture over time |
+| `tool_guidelines` | How to use available tools (memory, search, web) |
+
+## Phoenix Mode (Auto-Restart)
+
+Phoenix mode provides **seamless memory integration** without losing context:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ WORKING                                                         │
+│ User: "Use aerospace-ui for all buttons"                        │
+│ Kimi: "Got it"                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ DETECT (daemon watches wire.jsonl)                              │
+│ → Explicit memory request detected                              │
+│ → Sent to Letta immediately                                     │
+│ → New guidance received: "User prefers aerospace-ui"            │
+├─────────────────────────────────────────────────────────────────┤
+│ SYNC POINT (Kimi finishes current turn)                         │
+│ → Daemon detects TurnEnd in wire.jsonl                          │
+│ → SAFE TO RESTART                                               │
+├─────────────────────────────────────────────────────────────────┤
+│ REBIRTH                                                         │
+│ → SUBCONSCIOUS.md updated                                       │
+│ → kimisub spawns: kimi --continue                               │
+│ → Old process terminated                                        │
+│ → New Kimi session starts with fresh memory                     │
+├─────────────────────────────────────────────────────────────────┤
+│ CONTINUED                                                       │
+│ Kimi: "Session continued. Note: aerospace-ui preference noted" │
+│ You: 🕶️ *keeps coding, context intact*                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key points:**
+- Session persists via `--continue` (same conversation history)
+- SUBCONSCIOUS.md is re-read at startup
+- Zero context loss, maximum memory gain
+- Restart happens at safe points (between turns)
+
+## Architecture
+
+### Project Structure
+
+```
+kimi-subconscious/
+├── kimi_subconscious/
+│   ├── __init__.py
+│   ├── cli.py              # Main CLI entry
+│   ├── daemon.py           # Background watcher
+│   ├── injector.py         # SUBCONSCIOUS.md writer
+│   ├── letta_client.py     # Letta API wrapper
+│   ├── models.py           # Pydantic models
+│   ├── parser.py           # wire.jsonl parser + insight detector
+│   └── state.py            # State management
+├── Subconscious.af         # Letta agent definition
+├── scripts/
+│   ├── com.kimisub.consolidate.plist
+│   └── install-launchd.sh
+├── pyproject.toml
+└── README.md
+```
+
+### State Storage
+
+```
+~/Library/Application Support/kimi-subconscious/
+├── config.json                    # API keys, agent ID
+├── project_index.json             # hash → path mapping
+└── projects/
+    └── {md5_hash}/                # One per project
+        ├── SUBCONSCIOUS.md        # Guidance file
+        ├── conversations.json     # Session → Letta conv mapping
+        ├── last_read_{session}.json
+        └── insights.db            # SQLite for pattern detection
+```
+
+### Message Budget
+
+**Smart triggering** keeps API usage minimal:
+
+| Trigger Type | Frequency | API Calls |
+|--------------|-----------|-----------|
+| Explicit memory | As needed | ~10-50/month |
+| Corrections | As needed | ~10-30/month |
+| File hotspots | As needed | ~5-20/month |
+| Daily consolidation | Daily at 1 AM | ~30/month |
+| **Total** | | **~100-150/month** |
+
+Letta free plan: 1,000 messages/month. Well within limits.
+
+## Comparison with Claude Subconscious
+
+| Feature | Claude Subconscious | Kimi Subconscious |
+|---------|---------------------|-------------------|
+| Host | Claude Code | Kimi Code CLI |
+| Hooks | Native plugin system | File watcher daemon |
+| Transcript | JSONL via hooks | wire.jsonl parsing |
+| Injection | stdout → context | SUBCONSCIOUS.md file |
+| Insight detection | Server-side | Local (cheaper) |
+| Consolidation | Continuous | Daily 1 AM batch |
+
+## License
+
+MIT - Same as the original claude-subconscious.
+
+## Credits
+
+- Original concept and architecture by [Letta](https://letta.com)
+- Adapted for Kimi Code CLI by Ivan Kornienko
