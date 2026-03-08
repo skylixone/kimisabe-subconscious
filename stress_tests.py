@@ -5,14 +5,14 @@ Usage:
     python stress_tests.py <test_name>
 
 Tests:
-    resurrection      - Kill daemon mid-operation, verify auto-recovery
-    fsevents          - Exhaust FSEvents watcher limit
-    api_blackout      - Block API access, verify queue behavior
-    disk_full         - Simulate disk full condition
-    restart_loop      - Trigger Phoenix restart cascade
-    corruption        - Corrupt state files, verify recovery
-    rapid_changes     - 1000 file changes per second
-    concurrent        - Multiple sessions simultaneously
+    resurrection      - Kill daemon mid-operation, verify auto-recovery [✓ DONE]
+    restart_loop      - Trigger Phoenix restart cascade [✓ DONE]
+    fsevents          - Exhaust FSEvents watcher limit [TODO]
+    api_blackout      - Block API access, verify queue behavior [TODO]
+    disk_full         - Simulate disk full condition [TODO]
+    corruption        - Corrupt state files, verify recovery [TODO]
+    rapid_changes     - 1000 file changes per second [TODO]
+    concurrent        - Multiple sessions simultaneously [TODO]
 """
 
 from __future__ import annotations

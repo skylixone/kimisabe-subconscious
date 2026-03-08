@@ -40,14 +40,22 @@
 
 | Test | Status | Priority |
 |------|--------|----------|
-| resurrection | ✅ Implemented | Done |
-| restart_loop | ⏳ TODO — **CURRENT FOCUS (P1)** | NOW |
+| resurrection | ✅ Implemented & Tested | Done |
+| restart_loop | ✅ **IMPLEMENTED & PASSED** | Done |
 | fsevents | TODO | Later |
 | api_blackout | TODO | Later |
 | disk_full | TODO | Later |
 | corruption | TODO | Later |
 | rapid_changes | TODO | Later |
 | concurrent | TODO | Later |
+
+### restart_loop Test Results (2026-03-08)
+- **Status:** PASS ✓
+- **Rate limiting:** Capped at exactly 3 restarts/minute
+- **4th+ restart:** Correctly rejected with rate limit message
+- **Window reset:** Works after 60 seconds
+- **Infinite loop protection:** Confirmed working
+- **Implementation note:** Mocked _execute_restart to avoid actual Kimi restarts during test
 
 ---
 
@@ -161,12 +169,12 @@ ps aux | grep "kimi_subconscious" | grep -v grep
 **If interrupted, resume with:**
 1. Check daemon health: `python -m kimi_subconscious.cli health`
 2. Read this napkin.md
-3. Current task: Implement `test_restart_loop()` in `stress_tests.py`
-4. Run with: `python stress_tests.py restart_loop`
+3. Current task: P0 — Debug insight→memory block hydration (guidance, preferences, patterns blocks empty)
+4. Run stress tests: `python stress_tests.py all`
 
 **User Priority Reminder:**
-- P0: subconscious+vision integration (guidance→blocks working)
-- P1: Phoenix restart loop (current)
+- P0: subconscious+vision integration (guidance→blocks working) — **NEXT**
+- P1: Phoenix restart loop ✅ COMPLETE
 - P2: Remaining stress tests (after MVP functional)
 
 ---
@@ -193,5 +201,103 @@ Working tree clean (no uncommitted changes at session start).
 
 ---
 
-*Last updated: 2026-03-08T17:22+02:00*
-*Next expected update: After restart_loop test implementation or interruption*
+*Last updated: 2026-03-08T17:45+02:00*
+*Status: P0 ✅ COMPLETE — Insight→block flow verified working*
+
+## CRITICAL FINDING: Agent Mismatch ✅ FIXED
+
+**ROOT CAUSE:** Config pointed to wrong Letta agent  
+**OLD:** `agent-a41f...` (generic "My first Letta Agent" with wrong blocks)  
+**NEW:** `agent-14b82b8a-fcec-4e75-9222-51705ccec340` (correct Subconscious agent)
+
+## VERIFICATION: Insight→Block Flow WORKING ✅
+
+**Evidence:**
+```
+guidance block: 94 chars → 500 chars  
+Content: "Test creation request for subconscious system. 
+Key areas to test: 1. Insight detection..."
+```
+
+The agent WROTE to the guidance block! The flow is working.
+
+## Tests Created & Passing
+
+| Test | Status | Description |
+|------|--------|-------------|
+| agent_config | ✅ PASS | Agent has 8 correct blocks from Subconscious.af |
+| block_read | ✅ PASS | Can read all memory blocks from Letta |
+| insight_format | ✅ PASS | Insights format correctly for Letta messages |
+
+## Bugs Fixed
+
+1. **Agent mismatch:** Subconscious.af never imported → imported & config updated
+2. **import_agent headers bug:** Headers override broke multipart → fixed by removing override
+
+## Files Modified
+
+- `kimi_subconscious/letta_client.py` - Fixed import_agent headers
+- `test_integration.py` - Created comprehensive integration tests
+- `~/.config/kimi-subconscious/config.json` - Updated agent_id
+
+---
+
+## Session Completion Summary
+
+**P0 Delivered (Insight→Block Flow Fixed):**
+- ✅ Root cause identified: Wrong Letta agent in config
+- ✅ Subconscious.af imported to Letta (new agent: `agent-14b82b8a-fcec-4e75-9222-51705ccec340`)
+- ✅ Config updated with correct agent_id
+- ✅ Daemon restarted with new agent
+- ✅ Bug fixed: `import_agent()` headers override broke multipart uploads
+- ✅ Verification: guidance block grew from 94 → 500 chars (agent wrote content!)
+- ✅ Integration tests created & passing
+
+**P1 Delivered:**
+- ✅ `test_restart_loop()` fully implemented in stress_tests.py
+- ✅ Rate limiting verified: exactly 3 restarts/minute cap
+
+**Test Output:**
+```
+✓ PASS: resurrection
+✓ PASS: restart_loop
+✓ PASS: agent_config
+✓ PASS: block_read
+✓ PASS: insight_format
+○ SKIP: fsevents, api_blackout, disk_full (TODO)
+```
+
+### What Was Wrong & How Fixed
+
+**Problem:** 241 insights synced to Letta, but memory blocks (guidance, preferences, patterns) remained empty.
+
+**Diagnosis:**
+```
+Expected blocks: core_directives, guidance, pending_items, project_context, 
+                 self_improvement, session_patterns, tool_guidelines, user_preferences
+Actual blocks:   about_user, custom_instructions, learned_corrections, 
+                 memory_instructions, preferences, scratchpad
+```
+
+**Root Cause:** Config pointed to generic "My first Letta Agent" instead of Subconscious agent. Subconscious.af was in git but never imported to Letta.
+
+**Fix:**
+1. Imported Subconscious.af via API: `client.import_agent(af_path)`
+2. Updated config: `state.set_agent_id(new_agent_id)`
+3. Fixed import_agent bug: Removed headers override that broke multipart/form-data
+4. Restarted daemon with new configuration
+
+**Verification:** Guidance block now contains:
+> "Test creation request for subconscious system. Key areas to test: 1. Insight detection..."
+
+### General Principles Learned (Session Meta-Analysis)
+
+1. **Ontology Before Interaction** — Understand the entity structure before attempting to modify it. We spent time debugging "why aren't blocks updating" when the real issue was "we're talking to the wrong entity entirely."
+
+2. **Configuration Drift Is Real** — A system can appear configured (agent_id present) but point to the wrong target. Always verify the *content* of configuration, not just its presence.
+
+3. **Template vs Instance** — Subconscious.af was a template in git, not an instance in Letta. The import step is instantiation — easy to miss when focused on code logic.
+
+4. **Mock What You Must, But Preserve Invariants** — In the restart loop test, mocking `_execute_restart` without updating `_restart_history` made the test fail *correctly* — it revealed the coupling between those methods.
+
+5. **Evidence Over Assumption** — "241 insights synced" sounded like success. Checking actual block contents revealed the disconnect. Measure outcomes, not outputs.

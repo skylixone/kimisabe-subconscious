@@ -68,10 +68,11 @@ class LettaClient:
             files = {"file": (af_file.name, f, "application/json")}
             
             # Use multipart/form-data for file upload
+            # Don't pass headers - client already has Authorization set in __init__
+            # Passing headers here would override Content-Type needed for multipart
             response = self.client.post(
                 "/agents/import",
                 files=files,
-                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
             )
             response.raise_for_status()
             result = response.json()
