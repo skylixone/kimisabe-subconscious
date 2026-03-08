@@ -195,19 +195,130 @@ def test_restart_loop():
     
     Steps:
         1. Enable Phoenix mode
-        2. Create condition where guidance triggers repeatedly
-        3. Verify rate limiter kicks in at 3 restarts/min
-        4. Verify no infinite loop
+        2. Mock _execute_restart to track without actual restart
+        3. Rapid-fire 5 restart requests
+        4. Verify rate limiter kicks in at 3 restarts/min
+        5. Verify rate limit resets after window
+        6. Verify no infinite loop possible
     
-    Expected: Exactly 3 restarts, then rate limit message.
+    Expected: Exactly 3 restarts in window, then rate limited, then resets.
     """
     print("=" * 60)
     print("STRESS TEST 5: Phoenix Restart Loop")
     print("=" * 60)
-    print("WARNING: This test will restart Kimi sessions")
     
-    print("TODO: Implement restart loop test")
-    return None
+    from unittest.mock import patch, MagicMock
+    from kimi_subconscious.phoenix import PhoenixController, enable_phoenix_mode, should_auto_restart
+    from kimi_subconscious.state import StateManager
+    
+    # Ensure Phoenix mode is enabled
+    print("\n1. Checking Phoenix mode...")
+    if not should_auto_restart():
+        print("   Enabling Phoenix mode...")
+        enable_phoenix_mode(True)
+    print(f"   Phoenix mode: {'ENABLED' if should_auto_restart() else 'DISABLED'}")
+    
+    # Create controller with mocked _execute_restart
+    print("\n2. Initializing PhoenixController with mocked execution...")
+    state = StateManager()
+    controller = PhoenixController(state)
+    
+    # Track restart calls
+    restart_calls = []
+    
+    def mock_execute_restart(project_hash, session_id, reason):
+        """Mock that tracks calls without actually restarting.
+        
+        Also updates the controller's restart history (which the real
+        _execute_restart does) so rate limiting works correctly.
+        """
+        now = time.time()
+        restart_calls.append({
+            'project_hash': project_hash,
+            'session_id': session_id,
+            'reason': reason,
+            'timestamp': now
+        })
+        # Update controller's internal history (critical for rate limiting)
+        if session_id not in controller._restart_history:
+            controller._restart_history[session_id] = []
+        controller._restart_history[session_id].append(now)
+        controller._last_restart_attempt[session_id] = now
+        print(f"   [MOCK RESTART] #{len(restart_calls)}: {reason[:40]}...")
+        return True
+    
+    with patch.object(controller, '_execute_restart', side_effect=mock_execute_restart):
+        # Also mock _is_kimi_idle to always return True (simulating idle state)
+        with patch.object(controller, '_is_kimi_idle', return_value=True):
+            
+            print("\n3. Firing 5 rapid restart requests...")
+            project_hash = "test_project_hash_12345"
+            session_id = "test_session_id_67890"
+            
+            results = []
+            for i in range(5):
+                result = controller.request_restart(
+                    project_hash, 
+                    session_id, 
+                    f"Test restart trigger #{i+1}"
+                )
+                results.append(result)
+                status = "ACCEPTED" if result else "RATE LIMITED"
+                print(f"   Request #{i+1}: {status}")
+                time.sleep(0.1)  # Small delay to separate requests
+            
+            print(f"\n4. Results summary:")
+            print(f"   Total restart calls: {len(restart_calls)}")
+            print(f"   Accepted requests: {sum(results)}")
+            print(f"   Rejected (rate limited): {len(results) - sum(results)}")
+    
+    # Verify rate limiting worked
+    print("\n5. Verifying rate limiting...")
+    
+    # Check exactly 3 restarts executed
+    if len(restart_calls) != 3:
+        print(f"   ✗ FAIL: Expected 3 restarts, got {len(restart_calls)}")
+        return False
+    print("   ✓ Exactly 3 restarts executed (MAX_RESTARTS_PER_MINUTE)")
+    
+    # Check requests 4 and 5 were rate limited
+    if results[3] or results[4]:
+        print(f"   ✗ FAIL: Requests 4 and 5 should have been rate limited")
+        return False
+    print("   ✓ Requests 4 and 5 were rate limited")
+    
+    # Check rate limiter state
+    history = controller._restart_history.get(session_id, [])
+    if len(history) != 3:
+        print(f"   ✗ FAIL: Expected 3 history entries, got {len(history)}")
+        return False
+    print(f"   ✓ Restart history correctly tracked (3 entries)")
+    
+    # Verify _is_rate_limited returns True for this session
+    if not controller._is_rate_limited(session_id):
+        print("   ✗ FAIL: Session should be rate limited")
+        return False
+    print("   ✓ Rate limiter correctly identifies limited session")
+    
+    # Test rate limit window reset (manipulate history to be old)
+    print("\n6. Testing rate limit window reset...")
+    old_time = time.time() - 120  # 2 minutes ago
+    controller._restart_history[session_id] = [old_time, old_time + 1, old_time + 2]
+    
+    if controller._is_rate_limited(session_id):
+        print("   ✗ FAIL: Rate limit should reset after 60 seconds")
+        return False
+    print("   ✓ Rate limit correctly resets after window expires")
+    
+    print("\n" + "=" * 60)
+    print("✓ PASS: Phoenix restart loop rate limiting works correctly")
+    print("=" * 60)
+    print("\nKey findings:")
+    print("  - Rate limit caps at exactly 3 restarts/minute")
+    print("  - 4th+ restart is rejected with rate limit protection")
+    print("  - No infinite loop possible (rate limiter prevents it)")
+    print("  - Window correctly expires after 60 seconds")
+    return True
 
 
 def main():
