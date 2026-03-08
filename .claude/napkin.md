@@ -1,8 +1,9 @@
 # Napkin — Kimi-Subconscious Project
 
 > **Session Start:** 2026-03-08T17:18+02:00  
-> **Current Focus:** P1 — Phoenix Restart Loop Test  
-> **User Priority:** subconscious+vision integration MVP before stress tests
+> **Session End:** 2026-03-08T18:00+02:00  
+> **Status:** P0 ✅ COMPLETE — Kimisabe operational for all sessions  
+> **Current Phase:** Hardening (see ROADMAP.md)
 
 ---
 
@@ -301,3 +302,42 @@ Actual blocks:   about_user, custom_instructions, learned_corrections,
 4. **Mock What You Must, But Preserve Invariants** — In the restart loop test, mocking `_execute_restart` without updating `_restart_history` made the test fail *correctly* — it revealed the coupling between those methods.
 
 5. **Evidence Over Assumption** — "241 insights synced" sounded like success. Checking actual block contents revealed the disconnect. Measure outcomes, not outputs.
+
+---
+
+## Kimisabe 1.0 Confirmation
+
+### Current Architecture
+
+**VISION.md** (Global, static)  
+└── Symlink: `~/.kimi/VISION.md` → `/Users/ikornii/Documents/ai-config/shared-agent/VISION.md`  
+└── Loaded by: Kimi at session start (all sessions, all paths)
+
+**Subconscious** (Global, dynamic)  
+└── Daemon: Watches `~/.kimi/sessions/{hash}/{session_id}/wire.jsonl`  
+└── Letta Agent: `agent-14b82b8a-fcec-4e75-9222-51705ccec340`  
+└── Per-Project Output: `SUBCONSCIOUS.md` in each project directory  
+
+### How It Works
+
+1. **Every Kimi session** (regardless of path) writes to `~/.kimi/sessions/{project_hash}/{session_id}/wire.jsonl`
+2. **Daemon watches** ALL wire.jsonl files across ALL projects
+3. **Insights detected** → sent to Letta Subconscious agent
+4. **Agent processes** → writes to memory blocks (guidance, preferences, etc.)
+5. **Daemon reads blocks** → generates `SUBCONSCIOUS.md` in project directory
+6. **Phoenix mode** (optional): Auto-restarts Kimi when new guidance arrives
+
+### CONFIRMED: All Future Sessions Use Kimisabe
+
+✅ **Daemon is running** (PID changes as it restarts, currently healthy)  
+✅ **Watching all sessions** — any path, any project  
+✅ **Contributing insights** — every session feeds the Subconscious  
+✅ **Receiving guidance** — blocks populate with learned context  
+
+**Mechanism:** File system watchers on `~/.kimi/sessions/` — universal, path-agnostic.
+
+**Current limitation:** SUBCONSCIOUS.md is per-project, not global like VISION.md. Future enhancement could symlink a global summary.
+
+---
+
+*Session complete. Kimisabe is live.*
