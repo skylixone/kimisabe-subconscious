@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Subconscious Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        /* Aerospace UI — Dark Theme */
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #1a1a1d;
+            --border-subtle: #2a2a2e;
+            --border-accent: #3a3a3e;
+            --text-primary: #f5f5f5;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-blue: #60a5fa;
+            --accent-cyan: #22d3ee;
+            --accent-purple: #a78bfa;
+            --accent-green: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-red: #f87171;
+            --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .header-badge {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .header-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-top: 0.75rem;
+            max-width: 600px;
+        }
+
+        /* Section styling */
+        .section {
+            margin-bottom: 4rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-number {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Diagram container */
+        .diagram-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 2rem;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        /* Info cards */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 1.5rem;
+        }
+
+        .info-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .info-card-icon.blue { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
+        .info-card-icon.cyan { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); }
+        .info-card-icon.purple { background: rgba(167, 139, 250, 0.15); color: var(--accent-purple); }
+        .info-card-icon.green { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); }
+        .info-card-icon.amber { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); }
+
+        .info-card-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .info-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .info-card code {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            background: var(--bg-primary);
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            color: var(--accent-cyan);
+        }
+
+        /* Flow indicators */
+        .flow-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .flow-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+        }
+
+        .flow-arrow {
+            color: var(--accent-blue);
+            font-size: 1.25rem;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.blue { background: var(--accent-blue); }
+        .legend-dot.cyan { background: var(--accent-cyan); }
+        .legend-dot.purple { background: var(--accent-purple); }
+        .legend-dot.green { background: var(--accent-green); }
+        .legend-dot.amber { background: var(--accent-amber); }
+
+        /* Mermaid custom styling */
+        .mermaid .node rect,
+        .mermaid .node circle,
+        .mermaid .node polygon {
+            stroke-width: 2px;
+        }
+
+        .mermaid .edgeLabel {
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .mermaid .label {
+            font-family: var(--font-sans);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <span class="header-badge">Architecture Diagram</span>
+            <h1>Universal Subconscious Architecture</h1>
+            <p class="header-subtitle">
+                Persistent memory layer that survives session death. 
+                A bidirectional bridge between any terminal location and the Letta memory system.
+            </p>
+        </header>
+
+        <!-- Section 1: Overview Flow -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">01</span>
+                <h2 class="section-title">Universal Presence</h2>
+            </div>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TB
+    subgraph ANY["📍 Any Terminal Location"]
+        T1[~/projects/alpha]
+        T2[~/projects/beta]
+        T3[~/projects/gamma]
+    end
+
+    subgraph SESSION["🤖 Kimi Session"]
+        S1[Session Context]
+        S2[Active Memory]
+    end
+
+    subgraph SUBCONSCIOUS["🔮 Subconscious Layer"]
+        direction TB
+        L[Letta Memory Core]
+        P[Project Resolver]
+        E[Eager File Generator]
+        A[AGENTS.md Injection]
+        O[Orphan Handler]
+    end
+
+    T1 -->|activates| SESSION
+    T2 -->|activates| SESSION
+    T3 -->|activates| SESSION
+
+    SESSION <-->|always present| SUBCONSCIOUS
+
+    style ANY fill:#1a1a1d,stroke:#3a3a3e,stroke-width:2px,color:#f5f5f5
+    style SESSION fill:#1a1a1d,stroke:#60a5fa,stroke-width:2px,color:#f5f5f5
+    style SUBCONSCIOUS fill:#1a1a1d,stroke:#22d3ee,stroke-width:2px,color:#f5f5f5
+    style L fill:#111113,stroke:#a78bfa,stroke-width:2px,color:#f5f5f5
+    style P fill:#111113,stroke:#34d399,stroke-width:2px,color:#f5f5f5
+    style E fill:#111113,stroke:#34d399,stroke-width:2px,color:#f5f5f5
+    style A fill:#111113,stroke:#fbbf24,stroke-width:2px,color:#f5f5f5
+    style O fill:#111113,stroke:#f87171,stroke-width:2px,color:#f5f5f5
+                </pre>
+            </div>
+        </section>
+
+        <!-- Section 2: Bidirectional Flow -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">02</span>
+                <h2 class="section-title">Bidirectional Flow</h2>
+            </div>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    subgraph OUT["⬆️ OUT: Session → Letta"]
+        direction TB
+        O1[Session learns Important Shit™]
+        O2[Compress & categorize]
+        O3[Write to Letta memory]
+        O4[Update Subconscious.af]
+        
+        O1 --> O2 --> O3 --> O4
+    end
+
+    subgraph CORE["🔮 Letta Core"]
+        C1[(Memory Store)]
+    end
+
+    subgraph IN["⬇️ IN: Letta → Session"]
+        direction TB
+        I1[Session starts]
+        I2[Project Resolver runs]
+        I3[Inject AGENTS.md]
+        I4[Load relevant memories]
+        
+        I1 --> I2 --> I3 --> I4
+    end
+
+    OUT -->|writes| CORE
+    CORE -->|reads| IN
+
+    style OUT fill:#1a1a1d,stroke:#34d399,stroke-width:2px,color:#f5f5f5
+    style CORE fill:#111113,stroke:#a78bfa,stroke-width:3px,color:#f5f5f5
+    style IN fill:#1a1a1d,stroke:#60a5fa,stroke-width:2px,color:#f5f5f5
+    style C1 fill:#0a0a0b,stroke:#a78bfa,stroke-width:2px,color:#f5f5f5
+                </pre>
+            </div>
+        </section>
+
+        <!-- Section 3: Key Components Detail -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">03</span>
+                <h2 class="section-title">Key Components</h2>
+            </div>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart TB
+    subgraph ENTRY["Session Entry Point"]
+        E1[New Session Started]
+    end
+
+    subgraph RESOLVER["Project Resolver"]
+        direction TB
+        R1[Walk directory tree]
+        R2{Find .git root?}
+        R3[Identify project]
+        R4[Load project config]
+        
+        R1 --> R2
+        R2 -->|yes| R3
+        R2 -->|no| R1
+        R3 --> R4
+    end
+
+    subgraph GENERATOR["Eager File Generator"]
+        direction TB
+        G1{AGENTS.md exists?}
+        G2[Create from template]
+        G3[Inject into context]
+        
+        G1 -->|no| G2
+        G1 -->|yes| G3
+        G2 --> G3
+    end
+
+    subgraph INJECTION["AGENTS.md Injection"]
+        direction TB
+        A1[Parse AGENTS.md]
+        A2[Extract rules]
+        A3[Prepend to system prompt]
+    end
+
+    subgraph HANDLER["Orphan Handler"]
+        direction TB
+        H1[Track opened resources]
+        H2[Session ending?]
+        H3[Close all handles]
+        H4[No orphaned resources]
+        
+        H1 --> H2
+        H2 -->|yes| H3
+        H3 --> H4
+    end
+
+    E1 --> RESOLVER
+    RESOLVER --> GENERATOR
+    GENERATOR --> INJECTION
+    INJECTION --> HANDLER
+
+    style ENTRY fill:#1a1a1d,stroke:#60a5fa,stroke-width:2px,color:#f5f5f5
+    style RESOLVER fill:#111113,stroke:#34d399,stroke-width:2px,color:#f5f5f5
+    style GENERATOR fill:#111113,stroke:#34d399,stroke-width:2px,color:#f5f5f5
+    style INJECTION fill:#111113,stroke:#fbbf24,stroke-width:2px,color:#f5f5f5
+    style HANDLER fill:#111113,stroke:#f87171,stroke-width:2px,color:#f5f5f5
+                </pre>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon green">PR</div>
+                        <h3 class="info-card-title">Project Resolver</h3>
+                    </div>
+                    <p>Walks the directory tree to identify project boundaries. Uses <code>.git</code> roots and <code>pyproject.toml</code> markers. Loads project-specific configuration from <code>Subconscious.af</code>.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon green">EF</div>
+                        <h3 class="info-card-title">Eager File Generator</h3>
+                    </div>
+                    <p>Always writes. If <code>AGENTS.md</code> doesn't exist, creates it from template. No prompts, no questions — just generates the file so the session can proceed immediately.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon amber">AG</div>
+                        <h3 class="info-card-title">AGENTS.md Injection</h3>
+                    </div>
+                    <p>Parses <code>AGENTS.md</code> and prepends extracted rules to the system prompt. Provides context-aware instructions tailored to the specific project.</p>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon blue">OH</div>
+                        <h3 class="info-card-title">Orphan Handler</h3>
+                    </div>
+                    <p>Tracks all opened resources (files, connections, handles). Ensures every <code>open()</code> has a matching <code>close()</code>. Closes all resources on session end.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Data Flow -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">04</span>
+                <h2 class="section-title">Memory Persistence Cycle</h2>
+            </div>
+            <div class="diagram-container">
+                <pre class="mermaid">
+sequenceDiagram
+    participant T as Terminal
+    participant S as Kimi Session
+    participant R as Project Resolver
+    participant L as Letta Core
+    participant F as Subconscious.af
+
+    T->>S: Start session in ~/project
+    activate S
+    
+    S->>R: Identify project
+    activate R
+    R-->>S: Project context
+    deactivate R
+    
+    S->>L: Request memories
+    activate L
+    L-->>S: Relevant context
+    deactivate L
+    
+    S->>S: Work on task...
+    
+    S->>L: Store Important Shit™
+    activate L
+    L->>F: Compress & write
+    deactivate L
+    
+    S->>T: Close session
+    deactivate S
+                </pre>
+            </div>
+        </section>
+
+        <!-- Legend -->
+        <section class="section">
+            <div class="section-header">
+                <span class="section-number">05</span>
+                <h2 class="section-title">Legend</h2>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot blue"></div>
+                    <span>Session / Terminal</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot cyan"></div>
+                    <span>Subconscious Layer</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot purple"></div>
+                    <span>Letta Core</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot green"></div>
+                    <span>File System / Resolver</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot amber"></div>
+                    <span>Configuration</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-muted); font-size: 0.875rem; font-family: var(--font-mono);">
+            <p>Universal Subconscious Architecture v1.0</p>
+            <p style="margin-top: 0.5rem; color: var(--text-secondary);">Persistent memory for AI agents</p>
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#1a1a1d',
+                primaryTextColor: '#f5f5f5',
+                primaryBorderColor: '#3a3a3e',
+                lineColor: '#60a5fa',
+                secondaryColor: '#111113',
+                tertiaryColor: '#0a0a0b',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                diagramMarginX: 20,
+                diagramMarginY: 20,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35
+            }
+        });
+    </script>
+</body>
+</html>
